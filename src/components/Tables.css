@@ -1,0 +1,58 @@
+.table-container {
+  margin: 20px;
+}
+
+.planning-table {
+  border-collapse: collapse;
+  width: auto;
+  margin-bottom: 20px;
+}
+
+.planning-table th,
+.planning-table td {
+  border: 1px solid black;
+  padding: 8px;
+  text-align: center;
+  min-width: 40px;
+}
+
+.planning-table th {
+  background-color: #f5f5f5;
+}
+
+.planning-table td:first-child {
+  text-align: left;
+  white-space: nowrap;
+  padding-right: 15px;
+}
+
+.planning-table tfoot td {
+  text-align: left;
+  padding: 10px;
+}
+
+.planning-table input[type="number"] {
+  border: none;
+  width: 100%;
+  background: transparent;
+  text-align: center;
+  -moz-appearance: textfield;
+}
+
+.planning-table input[type="number"]::-webkit-outer-spin-button,
+.planning-table input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.planning-table tfoot input[type="number"] {
+  border: 1px solid #ccc;
+  padding: 2px 4px;
+  width: 60px;
+  margin-left: 8px;
+}
+
+h2 {
+  margin-bottom: 10px;
+  font-weight: normal;
+}

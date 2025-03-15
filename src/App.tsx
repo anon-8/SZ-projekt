@@ -1,0 +1,55 @@
+// App.tsx
+import React, { useState } from "react";
+import BOMDisplay from "./components/BOMDisplay";
+import GHPForm from "./components/GHPForm";
+import InventoryForm from "./components/InventoryForm";
+import MRPTables from "./components/MRPTables";
+import { calculateMRP, MRPItem } from "./utils/mrp";
+import { GHPWeek } from "./utils/ghp";
+import { doorBOM, expandBOM } from "./utils/bom";
+
+const ITEM_CONFIGS = {
+  Rama: { leadTime: 2, lotSize: 80, qtyPerUnit: 4, plannedArrival: 0 },
+  Wypełnienie: { leadTime: 2, lotSize: 10, qtyPerUnit: 1, plannedArrival: 0 },
+  Okleina: { leadTime: 1, lotSize: 20, qtyPerUnit: 1, plannedArrival: 0 },
+  Zamek: { leadTime: 2, lotSize: 30, qtyPerUnit: 1, plannedArrival: 0 },
+  Klamka: { leadTime: 1, lotSize: 30, qtyPerUnit: 2, plannedArrival: 0 },
+};
+
+const App: React.FC = () => {
+  const [inventory, setInventory] = useState<Record<string, number>>({});
+  const [mrpItems, setMRPItems] = useState<MRPItem[]>([]);
+
+  const handleInventoryUpdate = (newInventory: Record<string, number>) => {
+    setInventory(newInventory);
+  };
+
+  const handleGHPCalculation = (results: GHPWeek[], newRealizationTime: number) => {
+    // Calculate MRP for each BOM item
+    const bomItems = expandBOM(doorBOM).filter((item) => item.name in ITEM_CONFIGS);
+    const mrpResults = bomItems.map((bomItem) => {
+      const config = ITEM_CONFIGS[bomItem.name as keyof typeof ITEM_CONFIGS];
+      const mrpItem = calculateMRP(results, inventory[bomItem.name] || 0, {
+        ...config,
+        realizationTime: newRealizationTime,
+      });
+      mrpItem.name = bomItem.name;
+      mrpItem.bomLevel = bomItem.level;
+      return mrpItem;
+    });
+
+    setMRPItems(mrpResults);
+  };
+
+  return (
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">MRP & GHP Simulation for Drzwi</h1>
+      <BOMDisplay />
+      <InventoryForm onInventoryUpdate={handleInventoryUpdate} />
+      <GHPForm onCalculate={handleGHPCalculation} />
+      {mrpItems.length > 0 && <MRPTables items={mrpItems} />}
+    </div>
+  );
+};
+
+export default App;
