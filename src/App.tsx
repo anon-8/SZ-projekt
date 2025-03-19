@@ -9,11 +9,11 @@ import { GHPWeek } from "./utils/ghp";
 import { doorBOM, expandBOM } from "./utils/bom";
 
 const ITEM_CONFIGS = {
-  Rama: { leadTime: 2, lotSize: 80, qtyPerUnit: 4, plannedArrival: 0 },
-  Wypełnienie: { leadTime: 2, lotSize: 10, qtyPerUnit: 1, plannedArrival: 0 },
-  Okleina: { leadTime: 1, lotSize: 20, qtyPerUnit: 1, plannedArrival: 0 },
-  Zamek: { leadTime: 2, lotSize: 30, qtyPerUnit: 1, plannedArrival: 0 },
-  Klamka: { leadTime: 1, lotSize: 30, qtyPerUnit: 2, plannedArrival: 0 },
+  Rama: { realizationTime: 2, leadTime: 1, lotSize: 80, qtyPerUnit: 4 },
+  Wypełnienie: { realizationTime: 2, leadTime: 1, lotSize: 10, qtyPerUnit: 1 },
+  Okleina: { realizationTime: 1, leadTime: 1, lotSize: 20, qtyPerUnit: 1 },
+  Zamek: { realizationTime: 3, leadTime: 1, lotSize: 40, qtyPerUnit: 1 },
+  Klamka: { realizationTime: 1, leadTime: 1, lotSize: 30, qtyPerUnit: 2 },
 };
 
 const App: React.FC = () => {
@@ -24,17 +24,17 @@ const App: React.FC = () => {
     setInventory(newInventory);
   };
 
-  const handleGHPCalculation = (results: GHPWeek[], newRealizationTime: number) => {
+  const handleGHPCalculation = (results: GHPWeek[]) => {
     // Calculate MRP for each BOM item
     const bomItems = expandBOM(doorBOM).filter((item) => item.name in ITEM_CONFIGS);
     const mrpResults = bomItems.map((bomItem) => {
       const config = ITEM_CONFIGS[bomItem.name as keyof typeof ITEM_CONFIGS];
       const mrpItem = calculateMRP(results, inventory[bomItem.name] || 0, {
         ...config,
-        realizationTime: newRealizationTime,
+        bomLevel: bomItem.level,
+        isProductionItem: true,
       });
       mrpItem.name = bomItem.name;
-      mrpItem.bomLevel = bomItem.level;
       return mrpItem;
     });
 
