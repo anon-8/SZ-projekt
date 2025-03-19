@@ -1,4 +1,3 @@
-// components/BOMDisplay.tsx
 import React from "react";
 import { doorBOM, expandBOM } from "../utils/bom";
 

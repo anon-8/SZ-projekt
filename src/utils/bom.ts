@@ -1,4 +1,3 @@
-// utils/bom.ts
 import { BOMItem } from "./types";
 
 export const doorBOM: BOMItem = {

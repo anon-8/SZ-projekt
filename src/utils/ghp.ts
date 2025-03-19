@@ -1,5 +1,3 @@
-// utils/ghp.ts
-
 export interface GHPWeek {
   week: number;
   predictedDemand: number;
@@ -8,7 +6,6 @@ export interface GHPWeek {
   onHand: number;
 }
 
-// A simple simulation function for GHP
 export function simulateGHP(
   predictedDemands: number[],
   productionPlan: number[],
@@ -21,9 +18,7 @@ export function simulateGHP(
     const demand = predictedDemands[i];
     const production = productionPlan[i] || 0;
 
-    // Calculate total available before demand
     const totalAvailable = inventory + production;
-    // Calculate remaining inventory after demand (this will be shown as "available")
     const remainingInventory = Math.max(0, totalAvailable - demand);
 
     result.push({
@@ -34,7 +29,6 @@ export function simulateGHP(
       onHand: totalAvailable - demand,
     });
 
-    // Pass the remaining inventory to next week
     inventory = remainingInventory;
   }
   return result;

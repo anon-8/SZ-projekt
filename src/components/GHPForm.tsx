@@ -1,4 +1,3 @@
-// components/GHPForm.tsx
 import React, { useState } from "react";
 import { simulateGHP, GHPWeek } from "../utils/ghp";
 import "./Tables.css";

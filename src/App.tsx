@@ -12,7 +12,7 @@ const ITEM_CONFIGS = {
   Rama: { realizationTime: 2, leadTime: 1, lotSize: 80, qtyPerUnit: 4 },
   Wypełnienie: { realizationTime: 2, leadTime: 1, lotSize: 10, qtyPerUnit: 1 },
   Okleina: { realizationTime: 1, leadTime: 1, lotSize: 20, qtyPerUnit: 1 },
-  Zamek: { realizationTime: 3, leadTime: 1, lotSize: 40, qtyPerUnit: 1 },
+  Zamek: { realizationTime: 3, leadTime: 0, lotSize: 40, qtyPerUnit: 1 },
   Klamka: { realizationTime: 1, leadTime: 1, lotSize: 30, qtyPerUnit: 2 },
 };
 
@@ -25,7 +25,6 @@ const App: React.FC = () => {
   };
 
   const handleGHPCalculation = (results: GHPWeek[]) => {
-    // Calculate MRP for each BOM item
     const bomItems = expandBOM(doorBOM).filter((item) => item.name in ITEM_CONFIGS);
     const mrpResults = bomItems.map((bomItem) => {
       const config = ITEM_CONFIGS[bomItem.name as keyof typeof ITEM_CONFIGS];

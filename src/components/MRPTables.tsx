@@ -7,7 +7,6 @@ interface MRPTablesProps {
 }
 
 const MRPTables: React.FC<MRPTablesProps> = ({ items }) => {
-  // Sort items by BOM level in ascending order
   const sortedItems = [...items].sort((a, b) => a.bomLevel - b.bomLevel);
 
   return (
