@@ -9,7 +9,8 @@ import { GHPWeek } from "./utils/ghp";
 import { doorBOM, expandBOM } from "./utils/bom";
 
 const ITEM_CONFIGS = {
-  Rama: { realizationTime: 2, leadTime: 1, lotSize: 80, qtyPerUnit: 4 },
+  "Skrzydło drzwiowe": { realizationTime: 2, leadTime: 1, lotSize: 10, qtyPerUnit: 1 },
+  Rama: { realizationTime: 2, leadTime: 1, lotSize: 80, qtyPerUnit: 1 },
   Wypełnienie: { realizationTime: 2, leadTime: 1, lotSize: 10, qtyPerUnit: 1 },
   Okleina: { realizationTime: 1, leadTime: 1, lotSize: 20, qtyPerUnit: 1 },
   Zamek: { realizationTime: 3, leadTime: 0, lotSize: 40, qtyPerUnit: 1 },
@@ -28,11 +29,30 @@ const App: React.FC = () => {
     const bomItems = expandBOM(doorBOM).filter((item) => item.name in ITEM_CONFIGS);
     const mrpResults = bomItems.map((bomItem) => {
       const config = ITEM_CONFIGS[bomItem.name as keyof typeof ITEM_CONFIGS];
-      const mrpItem = calculateMRP(results, inventory[bomItem.name] || 0, {
-        ...config,
-        bomLevel: bomItem.level,
-        isProductionItem: true,
-      });
+
+      const parentItem = bomItems.find(
+        (item) =>
+          item.level === bomItem.level - 1 &&
+          doorBOM.children?.some(
+            (child) =>
+              child.name === item.name && child.children?.some((grandChild) => grandChild.name === bomItem.name)
+          )
+      );
+
+      const parentRealizationTime = parentItem
+        ? ITEM_CONFIGS[parentItem.name as keyof typeof ITEM_CONFIGS].realizationTime
+        : 0;
+
+      const mrpItem = calculateMRP(
+        results,
+        inventory[bomItem.name] || 0,
+        {
+          ...config,
+          bomLevel: bomItem.level,
+          isProductionItem: true,
+        },
+        parentRealizationTime
+      );
       mrpItem.name = bomItem.name;
       return mrpItem;
     });
