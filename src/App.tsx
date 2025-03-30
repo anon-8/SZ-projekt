@@ -9,6 +9,7 @@ import { GHPWeek } from "./utils/ghp";
 import { doorBOM, expandBOM } from "./utils/bom";
 
 const ITEM_CONFIGS = {
+  "Skrzydło drzwiowe": { realizationTime: 2, leadTime: 1, lotSize: 40, qtyPerUnit: 1 },
   Rama: { realizationTime: 2, leadTime: 1, lotSize: 80, qtyPerUnit: 4 },
   Wypełnienie: { realizationTime: 2, leadTime: 1, lotSize: 10, qtyPerUnit: 1 },
   Okleina: { realizationTime: 1, leadTime: 1, lotSize: 20, qtyPerUnit: 1 },
