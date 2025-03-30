@@ -82,8 +82,6 @@ const MRPTables: React.FC<MRPTablesProps> = ({ items, onPlannedArrivalsChange })
                 <td colSpan={11}>
                   Czas realizacji = {item.realizationTime}
                   <br />
-                  Czas dostawy = {item.leadTime}
-                  <br />
                   Wielkość partii = {item.lotSize}
                   <br />
                   Poziom BOM = {item.bomLevel}
