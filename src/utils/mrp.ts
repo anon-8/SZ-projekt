@@ -35,30 +35,51 @@ const DEFAULT_WEEKS = 10;
  * @param ghpResults - Array of weekly production requirements
  * @param inventory - Current inventory on hand
  * @param config - MRP configuration parameters
+ * @param userPlannedArrivals - Array of planned arrivals set by user
+ * @param parentPlannedOrderReleases - Array of planned order releases for parent item
  * @returns MRPItem with calculated values
  */
-export function calculateMRP(ghpResults: GHPWeek[], inventory: number, config: MRPConfig): MRPItem {
+export function calculateMRP(
+  ghpResults: GHPWeek[],
+  inventory: number,
+  config: MRPConfig,
+  userPlannedArrivals: number[] = new Array(DEFAULT_WEEKS).fill(0),
+  parentPlannedOrderReleases?: number[]
+): MRPItem {
   // Destructure configuration parameters
   const { lotSize, qtyPerUnit, realizationTime, leadTime, bomLevel, isProductionItem } = config;
   const weeks = DEFAULT_WEEKS;
 
   // Initialize arrays for all MRP calculations with zeros
   const totalRequirements = new Array(weeks).fill(0);
-  const plannedArrivals = new Array(weeks).fill(0);
+  const plannedArrivals = [...userPlannedArrivals];
   const predictedOnHand = new Array(weeks).fill(0);
   const netRequirements = new Array(weeks).fill(0);
   const plannedOrders = new Array(weeks).fill(0);
   const plannedOrderReleases = new Array(weeks).fill(0);
 
-  // Keep track of the last week when an order was planned
-  let lastOrderWeek = -realizationTime; // Initialize to allow first order immediately
+  // Calculate total requirements based on BOM level
+  if (bomLevel === 1) {
+    // For level 1 items, use GHP results
+    for (let week = 0; week < weeks; week++) {
+      const production = ghpResults[week]?.production || 0;
+      const adjustedWeek = Math.max(0, week - leadTime);
+      totalRequirements[adjustedWeek] = (totalRequirements[adjustedWeek] || 0) + production * qtyPerUnit;
+    }
+  } else if (bomLevel === 2 && parentPlannedOrderReleases) {
+    // For level 2 items, use parent's plannedOrderReleases
+    for (let week = 0; week < weeks; week++) {
+      totalRequirements[week] = parentPlannedOrderReleases[week] * qtyPerUnit;
+    }
+  }
 
-  // Calculate total requirements based on production schedule and shift by lead time
-  for (let week = 0; week < weeks; week++) {
-    const production = ghpResults[week]?.production || 0;
-    // Shift requirements earlier by lead time
-    const adjustedWeek = Math.max(0, week - leadTime);
-    totalRequirements[adjustedWeek] = (totalRequirements[adjustedWeek] || 0) + production * qtyPerUnit;
+  // Find the last week with total requirements
+  let lastRequirementWeek = 0;
+  for (let week = weeks - 1; week >= 0; week--) {
+    if (totalRequirements[week] > 0) {
+      lastRequirementWeek = week;
+      break;
+    }
   }
 
   // Set initial predicted on-hand inventory
@@ -66,11 +87,10 @@ export function calculateMRP(ghpResults: GHPWeek[], inventory: number, config: M
 
   // Main MRP calculation loop
   for (let week = 1; week < weeks; week++) {
-    // Calculate order receipts from past orders
-    const orderReceiptFromPast = week >= realizationTime ? plannedOrders[week - realizationTime] : 0;
-
-    // Calculate predicted on-hand inventory for current week
-    predictedOnHand[week] = predictedOnHand[week - 1] + orderReceiptFromPast - totalRequirements[week];
+    // Calculate predicted on-hand using the formula:
+    // predictedOnHand = -TotalRequirements + predictedOnHand(previous) + plannedOrderReleases + plannedArrivals
+    predictedOnHand[week] =
+      -totalRequirements[week] + predictedOnHand[week - 1] + plannedOrderReleases[week] + plannedArrivals[week];
 
     // If inventory is insufficient, calculate net requirements and plan orders
     if (predictedOnHand[week] < 0) {
@@ -83,27 +103,45 @@ export function calculateMRP(ghpResults: GHPWeek[], inventory: number, config: M
       for (let i = 0; i < numOrdersNeeded; i++) {
         // Calculate when this order needs to arrive
         const neededByWeek = week;
-        // Calculate when to place the order based on realization time only (lead time already accounted for)
-        // Calculate the earliest possible week for the new order
-        const earliestPossibleWeek = lastOrderWeek + realizationTime;
-        // Place order at the later of: earliest possible week or required week minus realization time
-        const orderWeek = Math.max(earliestPossibleWeek, neededByWeek - realizationTime);
 
-        if (orderWeek < weeks) {
+        // Find the last planned order week
+        let lastOrderWeek = -1;
+        for (let w = neededByWeek - 1; w >= 0; w--) {
+          if (plannedOrders[w] > 0) {
+            lastOrderWeek = w;
+            break;
+          }
+        }
+
+        // Calculate the next possible order week based on realization time
+        const nextPossibleWeek = lastOrderWeek + realizationTime;
+
+        // Calculate the latest possible order week to ensure delivery before last requirement
+        const latestPossibleWeek = lastRequirementWeek - realizationTime;
+
+        // Place order at the appropriate week
+        const orderWeek = Math.min(Math.max(nextPossibleWeek, neededByWeek - realizationTime), latestPossibleWeek);
+
+        if (orderWeek >= 0 && orderWeek < weeks) {
           // Place the order
           plannedOrders[orderWeek] = lotSize;
-          lastOrderWeek = orderWeek; // Update the last order week
 
           // Calculate when the order will be received
           const receiptWeek = orderWeek + realizationTime;
           if (receiptWeek < weeks) {
             plannedOrderReleases[receiptWeek] = lotSize;
-            // Update predicted on-hand if order arrives in current week or earlier
-            if (receiptWeek <= week) {
-              predictedOnHand[week] += lotSize;
-            }
           }
         }
+      }
+
+      // Recalculate predicted on-hand after placing orders
+      predictedOnHand[week] =
+        -totalRequirements[week] + predictedOnHand[week - 1] + plannedOrderReleases[week] + plannedArrivals[week];
+
+      // If we still have negative predicted on-hand after trying to place orders,
+      // keep it negative to indicate unmet requirements
+      if (predictedOnHand[week] < 0) {
+        netRequirements[week] = Math.abs(predictedOnHand[week]);
       }
     }
   }

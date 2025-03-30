@@ -4,10 +4,18 @@ import "./Tables.css";
 
 interface MRPTablesProps {
   items: MRPItem[];
+  onPlannedArrivalsChange: (itemName: string, week: number, value: number) => void;
 }
 
-const MRPTables: React.FC<MRPTablesProps> = ({ items }) => {
+const MRPTables: React.FC<MRPTablesProps> = ({ items, onPlannedArrivalsChange }) => {
   const sortedItems = [...items].sort((a, b) => a.bomLevel - b.bomLevel);
+
+  const handlePlannedArrivalsChange = (itemName: string, week: number, value: string) => {
+    const numValue = value === "" ? 0 : parseInt(value);
+    if (!isNaN(numValue)) {
+      onPlannedArrivalsChange(itemName, week, numValue);
+    }
+  };
 
   return (
     <div>
@@ -33,13 +41,21 @@ const MRPTables: React.FC<MRPTablesProps> = ({ items }) => {
               <tr>
                 <td>Planowane przyjęcia</td>
                 {item.plannedArrivals.map((value, i) => (
-                  <td key={i}>{value || ""}</td>
+                  <td key={i}>
+                    <input
+                      type="number"
+                      min="0"
+                      value={value || ""}
+                      onChange={(e) => handlePlannedArrivalsChange(item.name, i, e.target.value)}
+                      className="planned-arrivals-input"
+                    />
+                  </td>
                 ))}
               </tr>
               <tr>
                 <td>Przewidywane na stanie</td>
                 {item.predictedOnHand.map((value, i) => (
-                  <td key={i}>{value || ""}</td>
+                  <td key={i}>{value}</td>
                 ))}
               </tr>
               <tr>

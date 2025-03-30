@@ -1,55 +1,48 @@
 .table-container {
-  margin: 20px;
+  margin-bottom: 2rem;
 }
 
 .planning-table {
+  width: 100%;
   border-collapse: collapse;
-  width: auto;
-  margin-bottom: 20px;
+  margin-top: 1rem;
 }
 
 .planning-table th,
 .planning-table td {
-  border: 1px solid black;
+  border: 1px solid #ddd;
   padding: 8px;
   text-align: center;
-  min-width: 40px;
 }
 
 .planning-table th {
   background-color: #f5f5f5;
-}
-
-.planning-table td:first-child {
-  text-align: left;
-  white-space: nowrap;
-  padding-right: 15px;
+  font-weight: bold;
 }
 
 .planning-table tfoot td {
   text-align: left;
-  padding: 10px;
+  background-color: #f9f9f9;
 }
 
-.planning-table input[type="number"] {
-  border: none;
-  width: 100%;
-  background: transparent;
+.planned-arrivals-input {
+  width: 60px;
+  padding: 4px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
   text-align: center;
-  -moz-appearance: textfield;
 }
 
-.planning-table input[type="number"]::-webkit-outer-spin-button,
-.planning-table input[type="number"]::-webkit-inner-spin-button {
+.planned-arrivals-input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.planned-arrivals-input::-webkit-inner-spin-button,
+.planned-arrivals-input::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
-}
-
-.planning-table tfoot input[type="number"] {
-  border: 1px solid #ccc;
-  padding: 2px 4px;
-  width: 60px;
-  margin-left: 8px;
 }
 
 h2 {
