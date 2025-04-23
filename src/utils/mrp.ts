@@ -57,13 +57,13 @@ export function calculateMRP(
     }
   }
 
-  let lastRequirementWeek = 0;
-  for (let week = weeks - 1; week >= 0; week--) {
-    if (totalRequirements[week] > 0) {
-      lastRequirementWeek = week;
-      break;
-    }
-  }
+  // let lastRequirementWeek = 0;
+  // for (let week = weeks - 1; week >= 0; week--) {
+  //   if (totalRequirements[week] > 0) {
+  //     lastRequirementWeek = week;
+  //     break;
+  //   }
+  // }
 
   predictedOnHand[0] = inventory - totalRequirements[0];
 
@@ -79,17 +79,17 @@ export function calculateMRP(
       for (let i = 0; i < numOrdersNeeded; i++) {
         const neededByWeek = week;
 
-        let lastOrderWeek = -1;
-        for (let w = neededByWeek - 1; w >= 0; w--) {
-          if (plannedOrders[w] > 0) {
-            lastOrderWeek = w;
-            break;
-          }
-        }
+        // let lastOrderWeek = -1;
+        // for (let w = neededByWeek - 1; w >= 0; w--) {
+        //   if (plannedOrders[w] > 0) {
+        //     lastOrderWeek = w;
+        //     break;
+        //   }
+        // }
 
-        const nextPossibleWeek = lastOrderWeek + realizationTime;
+        // const nextPossibleWeek = lastOrderWeek + realizationTime;
 
-        const latestPossibleWeek = lastRequirementWeek - realizationTime;
+        // const latestPossibleWeek = lastRequirementWeek - realizationTime;
 
         const orderWeek = neededByWeek - realizationTime;
 

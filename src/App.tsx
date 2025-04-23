@@ -4,11 +4,22 @@ import BOMDisplay from "./components/BOMDisplay";
 import GHPForm from "./components/GHPForm";
 import InventoryForm from "./components/InventoryForm";
 import MRPTables from "./components/MRPTables";
+import ItemConfigForm from "./components/ItemConfigForm";
 import { calculateMRP, MRPItem } from "./utils/mrp";
 import { GHPWeek } from "./utils/ghp";
 import { doorBOM, expandBOM } from "./utils/bom";
 
-const ITEM_CONFIGS = {
+interface ItemConfig {
+  realizationTime: number;
+  lotSize: number;
+  qtyPerUnit: number;
+}
+
+type ItemConfigs = {
+  [key: string]: ItemConfig;
+};
+
+const DEFAULT_ITEM_CONFIGS: ItemConfigs = {
   "Skrzydło drzwiowe": { realizationTime: 2, lotSize: 40, qtyPerUnit: 1 },
   Rama: { realizationTime: 2, lotSize: 80, qtyPerUnit: 1 },
   Wypełnienie: { realizationTime: 2, lotSize: 10, qtyPerUnit: 1 },
@@ -22,21 +33,32 @@ const App: React.FC = () => {
   const [mrpItems, setMRPItems] = useState<MRPItem[]>([]);
   const [ghpResults, setGHPResults] = useState<GHPWeek[]>([]);
   const [ghpRealizationTime, setGHPRealizationTime] = useState<number>(1);
+  const [itemConfigs, setItemConfigs] = useState<ItemConfigs>(DEFAULT_ITEM_CONFIGS);
 
   const handleInventoryUpdate = (newInventory: Record<string, number>) => {
     setInventory(newInventory);
   };
 
+  const handleConfigChange = (itemName: string, field: keyof ItemConfig, value: number) => {
+    setItemConfigs(prev => ({
+      ...prev,
+      [itemName]: {
+        ...prev[itemName],
+        [field]: value
+      }
+    }));
+  };
+
   const handleGHPCalculation = (results: GHPWeek[], ghpRealizationTime: number) => {
     setGHPResults(results);
     setGHPRealizationTime(ghpRealizationTime);
-    const bomItems = expandBOM(doorBOM).filter((item) => item.name in ITEM_CONFIGS);
+    const bomItems = expandBOM(doorBOM).filter((item) => item.name in itemConfigs);
 
     // First calculate level 1 items
     const level1Items = bomItems
       .filter((item) => item.level === 1)
       .map((bomItem) => {
-        const config = ITEM_CONFIGS[bomItem.name as keyof typeof ITEM_CONFIGS];
+        const config = itemConfigs[bomItem.name];
         const mrpItem = calculateMRP(results, inventory[bomItem.name] || 0, {
           ...config,
           bomLevel: bomItem.level,
@@ -51,7 +73,7 @@ const App: React.FC = () => {
     const level2Items = bomItems
       .filter((item) => item.level === 2)
       .map((bomItem) => {
-        const config = ITEM_CONFIGS[bomItem.name as keyof typeof ITEM_CONFIGS];
+        const config = itemConfigs[bomItem.name];
         const parentItem = level1Items.find((item) => item.name === "Skrzydło drzwiowe");
         const mrpItem = calculateMRP(
           results,
@@ -59,7 +81,7 @@ const App: React.FC = () => {
           {
             ...config,
             bomLevel: bomItem.level,
-            leadTime: ITEM_CONFIGS["Skrzydło drzwiowe"].realizationTime,
+            leadTime: itemConfigs["Skrzydło drzwiowe"].realizationTime,
             isProductionItem: true,
           },
           undefined,
@@ -81,9 +103,9 @@ const App: React.FC = () => {
           ghpResults,
           inventory[itemName] || 0,
           {
-            ...ITEM_CONFIGS[itemName as keyof typeof ITEM_CONFIGS],
+            ...itemConfigs[itemName],
             bomLevel: item.bomLevel,
-            leadTime: item.bomLevel === 1 ? ghpRealizationTime : ITEM_CONFIGS["Skrzydło drzwiowe"].realizationTime,
+            leadTime: item.bomLevel === 1 ? ghpRealizationTime : itemConfigs["Skrzydło drzwiowe"].realizationTime,
             isProductionItem: true,
           },
           newPlannedArrivals,
@@ -101,6 +123,7 @@ const App: React.FC = () => {
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">MRP & GHP Simulation for Drzwi</h1>
       <BOMDisplay />
+      <ItemConfigForm configs={itemConfigs} onConfigChange={handleConfigChange} />
       <InventoryForm onInventoryUpdate={handleInventoryUpdate} />
       <GHPForm onCalculate={handleGHPCalculation} />
       {mrpItems.length > 0 && <MRPTables items={mrpItems} onPlannedArrivalsChange={handlePlannedArrivalsChange} />}
