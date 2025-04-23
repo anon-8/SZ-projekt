@@ -1,4 +1,9 @@
-import { BOMItem } from "./types";
+export interface BOMItem {
+  name: string;
+  quantity: number;
+  level: number;
+  children?: BOMItem[];
+}
 
 export const doorBOM: BOMItem = {
   name: "Drzwi",

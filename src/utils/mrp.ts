@@ -57,14 +57,6 @@ export function calculateMRP(
     }
   }
 
-  // let lastRequirementWeek = 0;
-  // for (let week = weeks - 1; week >= 0; week--) {
-  //   if (totalRequirements[week] > 0) {
-  //     lastRequirementWeek = week;
-  //     break;
-  //   }
-  // }
-
   predictedOnHand[0] = inventory - totalRequirements[0];
 
   for (let week = 1; week < weeks; week++) {
@@ -74,24 +66,12 @@ export function calculateMRP(
     if (predictedOnHand[week] < 0) {
       netRequirements[week] = Math.abs(predictedOnHand[week]);
 
-      const numOrdersNeeded = Math.ceil(netRequirements[week] / lotSize);
+      const numOrdersNeeded = Math.min(Math.ceil(netRequirements[week] / lotSize), week);
 
       for (let i = 0; i < numOrdersNeeded; i++) {
-        const neededByWeek = week;
+        const neededByWeek = week - realizationTime;
 
-        // let lastOrderWeek = -1;
-        // for (let w = neededByWeek - 1; w >= 0; w--) {
-        //   if (plannedOrders[w] > 0) {
-        //     lastOrderWeek = w;
-        //     break;
-        //   }
-        // }
-
-        // const nextPossibleWeek = lastOrderWeek + realizationTime;
-
-        // const latestPossibleWeek = lastRequirementWeek - realizationTime;
-
-        const orderWeek = neededByWeek - realizationTime;
+        const orderWeek = neededByWeek - i;
 
         if (orderWeek >= 0 && orderWeek < weeks) {
           plannedOrders[orderWeek] = lotSize;
@@ -99,6 +79,7 @@ export function calculateMRP(
           const receiptWeek = orderWeek + realizationTime;
           if (receiptWeek < weeks) {
             plannedOrderReleases[receiptWeek] = lotSize;
+            predictedOnHand[receiptWeek] += lotSize;
           }
         }
       }
