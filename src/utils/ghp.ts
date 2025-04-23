@@ -19,7 +19,7 @@ export function simulateGHP(
     const production = productionPlan[i] || 0;
 
     const totalAvailable = inventory + production;
-    const remainingInventory = Math.max(0, totalAvailable - demand);
+    const remainingInventory = totalAvailable - demand;
 
     result.push({
       week: i + 1,
