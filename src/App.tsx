@@ -35,12 +35,12 @@ const App: React.FC = () => {
   const [itemConfigs, setItemConfigs] = useState<ItemConfigs>(DEFAULT_ITEM_CONFIGS);
 
   const handleConfigChange = (itemName: string, field: keyof ItemConfig, value: number) => {
-    setItemConfigs(prev => ({
+    setItemConfigs((prev) => ({
       ...prev,
       [itemName]: {
         ...prev[itemName],
-        [field]: value
-      }
+        [field]: value,
+      },
     }));
   };
 
@@ -92,20 +92,19 @@ const App: React.FC = () => {
       if (item.name === itemName) {
         const newPlannedArrivals = [...item.plannedArrivals];
         newPlannedArrivals[week] = value;
-        const recalculatedItem = calculateMRP(
-          ghpResults,
-          itemConfigs[itemName].inventory,
-          {
-            ...itemConfigs[itemName],
-            bomLevel: item.bomLevel,
-            leadTime: item.bomLevel === 1 ? ghpRealizationTime : itemConfigs["Skrzydło drzwiowe"].realizationTime,
-            isProductionItem: true,
-          },
-          newPlannedArrivals,
-          item.bomLevel === 2 ? mrpItems.find((i) => i.name === "Skrzydło drzwiowe")?.plannedOrderReleases : undefined
-        );
-        recalculatedItem.name = itemName;
-        return recalculatedItem;
+
+        const predictedOnHand = [...item.predictedOnHand];
+        predictedOnHand[week] += newPlannedArrivals[week];
+
+        for (let i = week + 1; i < predictedOnHand.length; i++) {
+          predictedOnHand[i] += newPlannedArrivals[week];
+        }
+
+        return {
+          ...item,
+          plannedArrivals: newPlannedArrivals,
+          predictedOnHand,
+        };
       }
       return item;
     });
@@ -116,10 +115,7 @@ const App: React.FC = () => {
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Symulacja MRP i GHP dla Drzwi</h1>
       <BOMDisplay />
-      <ItemConfigForm
-        configs={itemConfigs}
-        onConfigChange={handleConfigChange}
-      />
+      <ItemConfigForm configs={itemConfigs} onConfigChange={handleConfigChange} />
       <GHPForm onCalculate={handleGHPCalculation} />
       {mrpItems.length > 0 && <MRPTables items={mrpItems} onPlannedArrivalsChange={handlePlannedArrivalsChange} />}
     </div>
