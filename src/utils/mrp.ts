@@ -53,7 +53,7 @@ export function calculateMRP(
     }
   } else if (bomLevel === 2 && parentPlannedOrderReleases) {
     for (let week = 0; week < weeks; week++) {
-      totalRequirements[week] = parentPlannedOrderReleases[week] * qtyPerUnit;
+      totalRequirements[week - leadTime] = parentPlannedOrderReleases[week] * qtyPerUnit;
     }
   }
 
